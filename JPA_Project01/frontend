@@ -1,0 +1,132 @@
+import React, { useState, useEffect } from 'react';
+import axios from 'axios';
+
+function App() {
+  const [students, setStudents] = useState([]);
+  const [newStudent, setNewStudent] = useState({ name: '', email: '', age: '' });
+  const [editStudent, setEditStudent] = useState({ id: '', name: '', email: '', age: '' });
+
+  useEffect(() => {
+    // Fetch students from backend
+    axios.get('http://localhost:8080/api/std/all')
+      .then(response => setStudents(response.data))
+      .catch(error => console.error('Error fetching students:', error));
+  }, []);
+
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setNewStudent({ ...newStudent, [name]: value });
+  };
+
+  const handleEditChange = (e) => {
+    const { name, value } = e.target;
+    setEditStudent({ ...editStudent, [name]: value });
+  };
+
+  const handleAddStudent = (e) => {
+    e.preventDefault();
+    axios.post('http://localhost:8080/api/std/save', newStudent)
+      .then(response => {
+        setStudents([...students, response.data]);
+        setNewStudent({ name: '', email: '', age: '' });
+      })
+      .catch(error => console.error('Error adding student:', error));
+  };
+
+  const handleEditStudent = (e) => {
+    e.preventDefault();
+    axios.put(`http://localhost:8080/api/std/${editStudent.id}`, editStudent)
+      .then(response => {
+        const updatedStudents = students.map(student => student.id === editStudent.id ? response.data : student);
+        setStudents(updatedStudents);
+        setEditStudent({ id: '', name: '', email: '', age: '' });
+      })
+      .catch(error => console.error('Error updating student:', error));
+  };
+
+  const handleDeleteStudent = (id) => {
+    axios.delete(`http://localhost:8080/api/std/${id}`)
+      .then(() => {
+        setStudents(students.filter(student => student.id !== id));
+      })
+      .catch(error => console.error('Error deleting student:', error));
+  };
+
+  return (
+    <div className="App">
+      <h1>Student Management System</h1>
+
+      <h2>Add Student</h2>
+      <form onSubmit={handleAddStudent}>
+        <input
+          type="text"
+          name="name"
+          placeholder="Name"
+          value={newStudent.name}
+          onChange={handleInputChange}
+        />
+        <input
+          type="email"
+          name="email"
+          placeholder="Email"
+          value={newStudent.email}
+          onChange={handleInputChange}
+        />
+        <input
+          type="number"
+          name="age"
+          placeholder="Age"
+          value={newStudent.age}
+          onChange={handleInputChange}
+        />
+        <button type="submit">Add Student</button>
+      </form>
+
+      <h2>Edit Student</h2>
+      <form onSubmit={handleEditStudent}>
+        <input
+          type="number"
+          name="id"
+          placeholder="ID"
+          value={editStudent.id}
+          onChange={handleEditChange}
+        />
+        <input
+          type="text"
+          name="name"
+          placeholder="Name"
+          value={editStudent.name}
+          onChange={handleEditChange}
+        />
+        <input
+          type="email"
+          name="email"
+          placeholder="Email"
+          value={editStudent.email}
+          onChange={handleEditChange}
+        />
+        <input
+          type="number"
+          name="age"
+          placeholder="Age"
+          value={editStudent.age}
+          onChange={handleEditChange}
+        />
+        <button type="submit">Update Student</button>
+      </form>
+
+      <h2>Students List</h2>
+      <ul>
+        {students.map(student => (
+          <li key={student.id}>
+            {student.name} ({student.email}, Age: {student.age}) 
+            <button onClick={() => handleDeleteStudent(student.id)}>Delete</button>
+            <button onClick={() => setEditStudent(student)}>Edit</button>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
+export default App;
