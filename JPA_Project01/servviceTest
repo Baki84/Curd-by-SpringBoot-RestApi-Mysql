@@ -1,0 +1,70 @@
+package com.genie.JPA_Project01.service;
+
+import com.genie.JPA_Project01.entity.Student;
+import com.genie.JPA_Project01.repo.StudentRepo;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.Mockito;
+import org.springframework.boot.test.context.SpringBootTest;
+
+import static org.junit.jupiter.api.Assertions.*;
+
+@SpringBootTest
+public class StudentServiceTest {
+
+    @Mock
+    private StudentRepo studentRepo;
+
+    @InjectMocks
+    private StudentService studentService;
+
+    private Student student;
+
+    @BeforeEach
+    public void setup() {
+        student = new Student(1, "John Doe", "john@example.com", 22);
+    }
+
+    @Test
+    public void testSaveStudent() {
+        Mockito.when(studentRepo.save(student)).thenReturn(student);
+
+        Student savedStudent = studentService.saveStudent(student);
+        assertNotNull(savedStudent);
+        assertEquals("John Doe", savedStudent.getName());
+    }
+
+    @Test
+    public void testGetStudentById() {
+        Mockito.when(studentRepo.findById(1)).thenReturn(java.util.Optional.of(student));
+
+        Student foundStudent = studentService.getStudentById(1);
+        assertNotNull(foundStudent);
+        assertEquals(1, foundStudent.getId());
+        assertEquals("john@example.com", foundStudent.getEmail());
+    }
+
+    @Test
+    public void testUpdateStudent() {
+        Student updatedStudent = new Student(1, "John Updated", "updated@example.com", 23);
+        Mockito.when(studentRepo.findById(1)).thenReturn(java.util.Optional.of(student));
+        Mockito.when(studentRepo.save(updatedStudent)).thenReturn(updatedStudent);
+
+        Student result = studentService.updateStudent(1, updatedStudent);
+        assertNotNull(result);
+        assertEquals("John Updated", result.getName());
+        assertEquals("updated@example.com", result.getEmail());
+    }
+
+    @Test
+    public void testDeleteStudentById() {
+        Mockito.when(studentRepo.findById(1)).thenReturn(java.util.Optional.of(student));
+        Mockito.doNothing().when(studentRepo).deleteById(1);
+
+        Student deletedStudent = studentService.deleteStudentById(1);
+        assertNotNull(deletedStudent);
+        assertEquals(1, deletedStudent.getId());
+    }
+}
