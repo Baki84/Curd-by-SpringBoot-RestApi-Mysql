@@ -1,0 +1,88 @@
+package com.genie.JPA_Project01.controller;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.genie.JPA_Project01.entity.Student;
+import com.genie.JPA_Project01.service.StudentService;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.http.MediaType;
+import org.springframework.test.web.servlet.MockMvc;
+
+import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+
+@WebMvcTest(StudentController.class)
+public class StudentControllerTest {
+
+    @Autowired
+    private MockMvc mockMvc;
+
+    @Mock
+    private StudentService studentService;
+
+    @InjectMocks
+    private StudentController studentController;
+
+    private Student student;
+
+    @BeforeEach
+    public void setup() {
+        student = new Student(1, "John Doe", "john@example.com", 22);
+    }
+
+    @Test
+    public void testCreateStudent() throws Exception {
+        when(studentService.saveStudent(student)).thenReturn(student);
+
+        mockMvc.perform(post("/api/std/save")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(new ObjectMapper().writeValueAsString(student)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.name").value("John Doe"))
+                .andExpect(jsonPath("$.email").value("john@example.com"));
+    }
+
+    @Test
+    public void testGetAllStudents() throws Exception {
+        when(studentService.getAllStudentData()).thenReturn(java.util.List.of(student));
+
+        mockMvc.perform(get("/api/std/all"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].name").value("John Doe"));
+    }
+
+    @Test
+    public void testGetStudentById() throws Exception {
+        when(studentService.getStudentById(1)).thenReturn(student);
+
+        mockMvc.perform(get("/api/std/1"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.name").value("John Doe"));
+    }
+
+    @Test
+    public void testUpdateStudent() throws Exception {
+        Student updatedStudent = new Student(1, "John Updated", "updated@example.com", 23);
+        when(studentService.updateStudent(1, updatedStudent)).thenReturn(updatedStudent);
+
+        mockMvc.perform(put("/api/std/1")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(new ObjectMapper().writeValueAsString(updatedStudent)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.name").value("John Updated"));
+    }
+
+    @Test
+    public void testDeleteStudent() throws Exception {
+        when(studentService.deleteStudentById(1)).thenReturn(student);
+
+        mockMvc.perform(delete("/api/std/1"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.name").value("John Doe"));
+    }
+}
